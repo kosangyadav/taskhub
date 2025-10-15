@@ -1,0 +1,23 @@
+{
+  "name": "taskhub",
+  "version": "1.0.0",
+  "description": "a simple cli tool for managing tasks...",
+  "type": "module",
+  "bin": {
+    "taskhub": "bin/taskhub.js"
+  },
+  "scripts": {
+    "start": "node ./bin/taskhub.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "taskhub",
+    "commander",
+    "node.js"
+  ],
+  "author": "baka",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^14.0.1"
+  }
+}
