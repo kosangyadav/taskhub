@@ -33,10 +33,18 @@ const listTasks = (detailed, options) => {
     return;
   } else if (detailed) {
     console.log(
-      "ID".padEnd(4) + "TITLE".padEnd(50) + "STATUS".padEnd(12) + "CREATED AT",
+      "ID".padEnd(4) +
+        "TITLE".padEnd(50) +
+        "SUB".padEnd(5) +
+        "STATUS".padEnd(8) +
+        "CREATED AT",
     );
     console.log(
-      "--".padEnd(4) + "-----".padEnd(50) + "------".padEnd(12) + "----------",
+      "--".padEnd(4) +
+        "-----".padEnd(50) +
+        "---".padEnd(5) +
+        "------".padEnd(8) +
+        "----------",
     );
 
     tasks.forEach((task) => {
@@ -46,7 +54,8 @@ const listTasks = (detailed, options) => {
       console.log(
         String(task.id).padEnd(4) +
           title.slice(0, 48).padEnd(50) +
-          task.status.padEnd(12) +
+          String(task.subtasks ? task.subtasks.length : 0).padEnd(5) +
+          task.status.padEnd(8) +
           task.createdAt,
       );
     });
@@ -59,7 +68,9 @@ const listTasks = (detailed, options) => {
     // });
   } else {
     tasks.forEach((task) => {
-      console.log(`${task.status} --> ${task.title}`);
+      console.log(
+        `${task.status} --> ${task.title} --> ${task.subtasks ? task.subtasks.length : 0} subtasks`,
+      );
     });
   }
 };
@@ -76,6 +87,15 @@ const listTask = (ID) => {
   console.log("Description: ", task.description || "No description");
   console.log("Status:      ", task.status);
   console.log("Created At:  ", task.createdAt);
+
+  if (Array.isArray(task.subtasks) && 0 < task.subtasks.length) {
+    console.log("\nSubTasks...");
+
+    task.subtasks.forEach((subtask) => {
+      console.log(`   [${subtask.id}] ${subtask.title}`);
+      console.log(`       Status: ${subtask.status}\n`);
+    });
+  }
 };
 
 const cmd = new Command("list")
