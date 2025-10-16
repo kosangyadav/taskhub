@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { readTasks, writeTasks } from "../storage/jsonOps.js";
-import { validateStatus } from "./list.js";
+import { validatePriority, validateStatus } from "./list.js";
 import { validateID } from "./add.js";
 
 const cmd = new Command("update")
@@ -12,9 +12,22 @@ const cmd = new Command("update")
   .option("-s, --status <status>", "new status (todo | doing | done)")
   .option("-t, --title <title>", "new title for the task")
   .option("-d, --description <description>", "new description for the task")
+  .option("-p, --priority <priority>", "new priority for the task")
+  .option("-D, --due <due>", "new due date for the task in format: DD-MM-YYYY")
+  .option(
+    "--tags <tags>",
+    "comma-separated tags for the task (e.g., tag1,tag2)",
+  )
   .description("Update a task's details with it's ID")
   .action((ID, options) => {
-    if (!options.status && !options.title && !options.description) {
+    if (
+      !options.status &&
+      !options.title &&
+      !options.description &&
+      !options.priority &&
+      !options.due &&
+      !options.tags
+    ) {
       console.error(
         "Please provide at least one option to update a task...\nUse options -t for title, -s for status or -d for description",
       );
@@ -73,6 +86,8 @@ const updateTheTask = (ID, options) => {
     // Validate ID for main tasks
     if (!validateID(ID, tasks)) return;
 
+    if (!validatePriority(options.priority) && options.priority) return;
+
     // Update the main tasks
     ID = parseInt(ID, 10);
 
@@ -81,6 +96,11 @@ const updateTheTask = (ID, options) => {
       title: options.title || tasks[ID].title,
       status: options.status || tasks[ID].status,
       description: options.description || tasks[ID].description,
+      priority: options.priority || tasks[ID].priority,
+      due: options.due || tasks[ID].due,
+      tags: options.tags ? options.tags.split(",") : tasks[ID].tags,
+      // Keep existing subtasks if any
+      subtasks: tasks[ID].subtasks || [],
     });
 
     console.log(`Task ID ${ID} updated...`);

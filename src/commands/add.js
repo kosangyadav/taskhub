@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { readTasks, writeTasks } from "../storage/jsonOps.js";
+import { validatePriority, validateStatus } from "./list.js";
 
 export const validateID = (ID, tasks) => {
   if (isNaN(ID) || ID < 0 || ID >= tasks.length) {
@@ -9,14 +10,25 @@ export const validateID = (ID, tasks) => {
   return true;
 };
 
-const addTask = (title, description) => {
+const addTask = (title, description, options) => {
   const tasks = readTasks();
+
+  // Validate status
+  if (!validateStatus(options.status)) return;
+
+  // Validate priority
+  if (!validatePriority(options.priority)) return;
+
   const newTask = {
     // id: Date.now(), // unique id (timestamp)
     id: tasks.length, // unique id (timestamp)
     title,
     description: description || "",
-    status: "todo", // todo | doing | done
+    status: options.status, // todo | doing | done
+    priority: options.priority, // low | medium | high
+    due: options.due || null, // DD-MM-YYYY
+    tags: options.tags ? options.tags.split(",") : [],
+    subtasks: [],
     createdAt: new Date().toISOString(),
   };
   tasks.push(newTask);
@@ -49,11 +61,23 @@ const cmd = new Command("add")
   .argument("<task-title>", "task's title")
   .argument("[task-description]", "task's description")
   .option("--sub <parentID>", "add a subtask")
+  .option(
+    "-s, --status <status>",
+    "set task status (todo, doing, done)",
+    "todo",
+  )
+  .option(
+    "-p, --priority <level>",
+    "set task priority (low, medium, high)",
+    "medium",
+  )
+  .option("-D, --due <date>", "set due date(DD-MM-YYYY)")
+  .option("--tags <tags>", "comma-separated tags for the task")
   .description("Add a new task or subtask")
   .action((title, description = "", options) => {
     // console.log({ options, title, description });
     if (options.sub) addSubtask(options.sub, title);
-    else addTask(title, description);
+    else addTask(title, description, options);
   });
 
 export default cmd;

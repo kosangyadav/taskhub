@@ -13,12 +13,43 @@ export const validateStatus = (status) => {
   } else return true;
 };
 
+export const validatePriority = (priority) => {
+  const validPriorities = ["low", "medium", "high", "top", "signal"];
+  if (!validPriorities.includes(priority)) {
+    console.error(
+      `Invalid priority. Please use one of the following: ${validPriorities.join(
+        ", ",
+      )}.`,
+    );
+    return false;
+  } else return true;
+};
+
 const listTasks = (detailed, options) => {
   let tasks = readTasks();
 
   if (options.status) {
     if (!validateStatus(options.status)) return;
     tasks = tasks.filter((task) => task.status == options.status);
+  }
+
+  if (options.priority) {
+    if (!validatePriority(options.priority)) return;
+    tasks = tasks.filter((task) => task.priority == options.priority);
+  }
+
+  if (options.due)
+    tasks = tasks.filter((task) => task.due && task.due == options.due);
+
+  if (options.tags) {
+    const tags = options.tags.split(",").map((tag) => tag.trim().toLowerCase());
+    tasks = tasks.filter(
+      (task) =>
+        task.tags &&
+        tags.every((tag) =>
+          task.tags.map((t) => t.toLowerCase()).includes(tag),
+        ),
+    );
   }
 
   if (options.find)
@@ -34,16 +65,22 @@ const listTasks = (detailed, options) => {
   } else if (detailed) {
     console.log(
       "ID".padEnd(4) +
+        "PRIORITY".padEnd(10) +
+        "DUE DATE".padEnd(12) +
         "TITLE".padEnd(50) +
         "SUB".padEnd(5) +
         "STATUS".padEnd(8) +
+        "TAGS".padEnd(16) +
         "CREATED AT",
     );
     console.log(
       "--".padEnd(4) +
+        "--------".padEnd(10) +
+        "--- ----".padEnd(12) +
         "-----".padEnd(50) +
         "---".padEnd(5) +
         "------".padEnd(8) +
+        "----".padEnd(16) +
         "----------",
     );
 
@@ -51,11 +88,20 @@ const listTasks = (detailed, options) => {
       const title =
         task.title.length > 48 ? task.title.slice(0, 45) + "..." : task.title;
 
+      const tags = task.tags
+        ? task.tags.length > 2
+          ? task.tags.slice(0, 2).join(", ") + ",..."
+          : task.tags.join(", ")
+        : "No Tags";
+
       console.log(
         String(task.id).padEnd(4) +
+          (task.priority ? task.priority : "medium").padEnd(10) +
+          (task.due ? task.due : "N/A").padEnd(12) +
           title.slice(0, 48).padEnd(50) +
           String(task.subtasks ? task.subtasks.length : 0).padEnd(5) +
           task.status.padEnd(8) +
+          tags.padEnd(16) +
           task.createdAt,
       );
     });
@@ -69,7 +115,7 @@ const listTasks = (detailed, options) => {
   } else {
     tasks.forEach((task) => {
       console.log(
-        `${task.status} --> ${task.title} --> ${task.subtasks ? task.subtasks.length : 0} subtasks`,
+        `[${task.id}]${task.status} --> ${task.title} --> ${task.subtasks ? task.subtasks.length : 0} subtasks`,
       );
     });
   }
@@ -83,9 +129,15 @@ const listTask = (ID) => {
     return;
   }
   console.log("ID:          ", task.id);
+  console.log("Priority:    ", task.priority);
+  console.log("Due Date:    ", task.due || "No due date");
   console.log("Title:       ", task.title);
   console.log("Description: ", task.description || "No description");
   console.log("Status:      ", task.status);
+  console.log(
+    "Tags:        ",
+    task.tags && 0 < task.tags.length ? task.tags.join(", ") : "No tags",
+  );
   console.log("Created At:  ", task.createdAt);
 
   if (Array.isArray(task.subtasks) && 0 < task.subtasks.length) {
@@ -103,6 +155,12 @@ const cmd = new Command("list")
   .argument("[ID]", "task ID to show detailed info")
   .option("-l, --long", "shows detailed list...")
   .option("-s, --status <status>", "shows filtered list based on status")
+  .option("-p, --priority <priority>", "shows filtered list based on priority")
+  .option("-D, --due <due>", "shows filtered list based on due date")
+  .option(
+    "--tags <tags>",
+    "shows filtered list based on tags (comma separated)",
+  )
   .option(
     "-f, --find <keywords>",
     "shows filtered list based on keywords for title or description",
