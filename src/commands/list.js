@@ -1,8 +1,33 @@
 import { Command } from "commander";
 import { readTasks } from "../storage/jsonOps.js";
 
-const listTasks = (detailed) => {
-  const tasks = readTasks();
+export const validateStatus = (status) => {
+  const validStatuses = ["todo", "doing", "done"];
+  if (!validStatuses.includes(status)) {
+    console.error(
+      `Invalid status. Please use one of the following: ${validStatuses.join(
+        ", ",
+      )}.`,
+    );
+    return false;
+  } else return true;
+};
+
+const listTasks = (detailed, options) => {
+  let tasks = readTasks();
+
+  if (options.status) {
+    if (!validateStatus(options.status)) return;
+    tasks = tasks.filter((task) => task.status == options.status);
+  }
+
+  if (options.find)
+    tasks = tasks.filter(
+      (task) =>
+        task.title.toLowerCase().includes(options.find.toLowerCase()) ||
+        task.description.toLowerCase().includes(options.find.toLowerCase()),
+    );
+
   if (tasks.length === 0) {
     console.log("No tasks found...");
     return;
@@ -57,10 +82,15 @@ const cmd = new Command("list")
   .description("List all tasks")
   .argument("[ID]", "task ID to show detailed info")
   .option("-l, --long", "shows detailed list...")
+  .option("-s, --status <status>", "shows filtered list based on status")
+  .option(
+    "-f, --find <keywords>",
+    "shows filtered list based on keywords for title or description",
+  )
   // .option("-i, --ID <ID>", "shows tasks with their IDs")
   .action((ID, options) => {
     if (ID) listTask(ID);
-    else if (options.long) listTasks(true);
-    else listTasks(false);
+    else if (options.long) listTasks(true, options);
+    else listTasks(false, options);
   });
 export default cmd;

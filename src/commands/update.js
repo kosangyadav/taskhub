@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { readTasks, writeTasks } from "../storage/jsonOps.js";
+import { validateStatus } from "./list.js";
 
 const cmd = new Command("update")
   .argument("<ID>", "task's id")
@@ -29,15 +30,7 @@ const updateTheTask = (ID, options) => {
   }
 
   // Validate status if provided
-  const validStatuses = ["todo", "doing", "done"];
-  if (options.status && !validStatuses.includes(options.status)) {
-    console.error(
-      `Invalid status. Please use one of the following: ${validStatuses.join(
-        ", ",
-      )}.`,
-    );
-    return;
-  }
+  if (options.status) if (!validateStatus(options.status)) return;
 
   // Update the task
   ID = parseInt(ID, 10);

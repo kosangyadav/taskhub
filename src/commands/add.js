@@ -1,13 +1,13 @@
 import { Command } from "commander";
 import { readTasks, writeTasks } from "../storage/jsonOps.js";
 
-const addNewTask = (title) => {
+const addNewTask = (title, description) => {
   const tasks = readTasks();
   const newTask = {
     // id: Date.now(), // unique id (timestamp)
     id: tasks.length, // unique id (timestamp)
     title,
-    description: "",
+    description: description || "",
     status: "todo", // todo | doing | done
     createdAt: new Date().toISOString(),
   };
@@ -17,8 +17,9 @@ const addNewTask = (title) => {
 };
 
 const cmd = new Command("add")
-  .argument("<task-title>", "task title")
+  .argument("<task-title>", "task's title")
+  .argument("[task-description]", "task's description")
   .description("Add a new task")
-  .action((title) => addNewTask(title));
+  .action((title, description = "") => addNewTask(title, description));
 
 export default cmd;
