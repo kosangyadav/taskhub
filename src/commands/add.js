@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { readTasks, writeTasks } from "../storage/jsonOps.js";
 import { validatePriority, validateStatus } from "./list.js";
+import { coloredPriority, coloredStatus, colors } from "../utils/colors.js";
 
 export const validateID = (ID, tasks) => {
   if (isNaN(ID) || ID < 0 || ID >= tasks.length) {
@@ -33,10 +34,24 @@ const addTask = (title, description, options) => {
   };
   tasks.push(newTask);
   writeTasks(tasks);
-  console.log(`Task added: ${title}`);
+  // console.log(`Task added: ${title}`);
+  console.log(`
+${colors.success("✔ Task added successfully!")}
+${colors.bold("Title:".padEnd(14))} ${colors.title(title)}
+${colors.bold("Description:".padEnd(14))} ${colors.info(description || "No description")}
+${colors.bold("Priority:".padEnd(14))} ${colors.error(coloredPriority(options.priority) || "medium")}
+${colors.bold("Status:".padEnd(14))} ${colors.warn(coloredStatus(options.status) || "todo")}
+${colors.bold("Due Date:".padEnd(14))} ${colors.error(options.due || "No due date")}
+${colors.bold("Tags:".padEnd(14))} ${
+    newTask.tags.length
+      ? newTask.tags.map((tag) => colors.tag(tag.trim())).join(", ")
+      : colors.meta("No tags")
+  }
+${colors.bold("Created at:".padEnd(14))} ${colors.meta(new Date().toLocaleString("ta-LK"))}
+`);
 };
 
-const addSubtask = (parentID, title) => {
+const addSubtask = (parentID, title, options) => {
   const tasks = readTasks();
 
   // Validate parentID
@@ -49,12 +64,18 @@ const addSubtask = (parentID, title) => {
   const newSubtask = {
     id: parentTask.subtasks.length,
     title,
-    status: "todo",
+    status: options.status || "todo",
     createdAt: new Date().toISOString(),
   };
   parentTask.subtasks.push(newSubtask);
   writeTasks(tasks);
-  console.log(`Subtask added under Task ID ${parentID}: ${title}`);
+  // console.log(`Subtask added under Task ID ${parentID}: ${title}`);
+  console.log(`${colors.success("✔ Subtask added successfully!")}
+${colors.bold("Parent Task: ".padEnd(18))} ${colors.meta("[" + parentID + "]")} ${colors.title(parentTask.title)}
+${colors.bold("Subtask Title:".padEnd(18))} ${colors.info(title)}
+${colors.bold("Subtask Status:".padEnd(18))} ${colors.warn(coloredStatus(options.status)) || "todo"}
+${colors.bold("Created at:".padEnd(18))} ${colors.meta(new Date().toLocaleString("ta-LK"))}
+`);
 };
 
 const cmd = new Command("add")
@@ -76,7 +97,7 @@ const cmd = new Command("add")
   .description("Add a new task or subtask")
   .action((title, description = "", options) => {
     // console.log({ options, title, description });
-    if (options.sub) addSubtask(options.sub, title);
+    if (options.sub) addSubtask(options.sub, title, options);
     else addTask(title, description, options);
   });
 
