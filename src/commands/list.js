@@ -1,13 +1,17 @@
 import { Command } from "commander";
 import { readTasks } from "../storage/jsonOps.js";
+import { bgColors, colors } from "../utils/colors.js";
+import { validateID } from "./add.js";
 
 export const validateStatus = (status) => {
   const validStatuses = ["todo", "doing", "done"];
   if (!validStatuses.includes(status)) {
     console.error(
-      `Invalid status. Please use one of the following: ${validStatuses.join(
-        ", ",
-      )}.`,
+      colors.error(
+        `✘ invalid status. Please use one of the following: ${validStatuses.join(
+          ", ",
+        )}.`,
+      ),
     );
     return false;
   } else return true;
@@ -17,9 +21,11 @@ export const validatePriority = (priority) => {
   const validPriorities = ["low", "medium", "high", "top", "signal"];
   if (!validPriorities.includes(priority)) {
     console.error(
-      `Invalid priority. Please use one of the following: ${validPriorities.join(
-        ", ",
-      )}.`,
+      colors.error(
+        `✘ invalid priority. Please use one of the following: ${validPriorities.join(
+          ", ",
+        )}.`,
+      ),
     );
     return false;
   } else return true;
@@ -60,28 +66,33 @@ const listTasks = (detailed, options) => {
     );
 
   if (tasks.length === 0) {
-    console.log("No tasks found...");
+    console.log(`${colors.error("✘ No tasks found...")}`);
     return;
   } else if (detailed) {
+    console.log(colors.success(`✔ Found ${tasks.length} task(s):\n`));
     console.log(
-      "ID".padEnd(4) +
-        "PRIORITY".padEnd(10) +
-        "DUE DATE".padEnd(12) +
-        "TITLE".padEnd(50) +
-        "SUB".padEnd(5) +
-        "STATUS".padEnd(8) +
-        "TAGS".padEnd(16) +
-        "CREATED AT",
+      colors.title(
+        "ID".padEnd(4) +
+          "PRIORITY".padEnd(10) +
+          "DUE DATE".padEnd(12) +
+          "TITLE".padEnd(50) +
+          "SUB".padEnd(5) +
+          "STATUS".padEnd(8) +
+          "TAGS".padEnd(16) +
+          "CREATED AT",
+      ),
     );
     console.log(
-      "--".padEnd(4) +
-        "--------".padEnd(10) +
-        "--- ----".padEnd(12) +
-        "-----".padEnd(50) +
-        "---".padEnd(5) +
-        "------".padEnd(8) +
-        "----".padEnd(16) +
-        "----------",
+      colors.title(
+        "--".padEnd(4) +
+          "--------".padEnd(10) +
+          "--- ----".padEnd(12) +
+          "-----".padEnd(50) +
+          "---".padEnd(5) +
+          "------".padEnd(8) +
+          "----".padEnd(16) +
+          "----------",
+      ),
     );
 
     tasks.forEach((task) => {
@@ -95,14 +106,16 @@ const listTasks = (detailed, options) => {
         : "No Tags";
 
       console.log(
-        String(task.id).padEnd(4) +
-          (task.priority ? task.priority : "medium").padEnd(10) +
-          (task.due ? task.due : "N/A").padEnd(12) +
-          title.slice(0, 48).padEnd(50) +
-          String(task.subtasks ? task.subtasks.length : 0).padEnd(5) +
-          task.status.padEnd(8) +
-          tags.padEnd(16) +
-          task.createdAt,
+        colors.info(
+          String(task.id).padEnd(4) +
+            (task.priority ? task.priority : "medium").padEnd(10) +
+            (task.due ? task.due : "N/A").padEnd(12) +
+            title.slice(0, 48).padEnd(50) +
+            String(task.subtasks ? task.subtasks.length : 0).padEnd(5) +
+            task.status.padEnd(8) +
+            tags.padEnd(16) +
+            task.createdAt,
+        ),
       );
     });
     // console.log("ID\tTitle\t\t\t\tStatus\t\tCreated At");
@@ -114,8 +127,11 @@ const listTasks = (detailed, options) => {
     // });
   } else {
     tasks.forEach((task) => {
+      const title =
+        task.title.length > 38 ? task.title.slice(0, 35) + "..." : task.title;
+
       console.log(
-        `[${task.id}]${task.status} --> ${task.title} --> ${task.subtasks ? task.subtasks.length : 0} subtasks`,
+        `${9 < tasks.length ? (String(task.id).length === 1 ? " " : "") : ""}${bgColors.info(String("[" + task.id + "]").padEnd(String(task.id).length === 1 ? 3 : 4))} ${colors.warn(task.status.padEnd(6))}${colors.title("--> " + title)}${colors.error(task.subtasks && 0 < task.subtasks.length ? ` --> ${task.subtasks.length} ${task.subtasks.length === 1 ? "subtask" : "subtasks"}` : "")}`,
       );
     });
   }
@@ -123,29 +139,38 @@ const listTasks = (detailed, options) => {
 
 const listTask = (ID) => {
   const tasks = readTasks();
+  if (!validateID(ID, tasks)) return;
   const task = tasks[ID];
   if (!task) {
     console.log(`Task with ID ${ID} not found...`);
     return;
   }
-  console.log("ID:          ", task.id);
-  console.log("Priority:    ", task.priority);
-  console.log("Due Date:    ", task.due || "No due date");
-  console.log("Title:       ", task.title);
-  console.log("Description: ", task.description || "No description");
-  console.log("Status:      ", task.status);
+  console.log("ID:          ", colors.meta(task.id));
+  console.log("Priority:    ", colors.error(task.priority));
+  console.log("Due Date:    ", colors.warn(task.due || "No due date"));
+  console.log("Title:       ", colors.title(task.title));
+  console.log(
+    "Description: ",
+    colors.info(task.description || "No description"),
+  );
+  console.log("Status:      ", colors.warn(task.status));
   console.log(
     "Tags:        ",
-    task.tags && 0 < task.tags.length ? task.tags.join(", ") : "No tags",
+    colors.tag(
+      task.tags && 0 < task.tags.length ? task.tags.join(", ") : "No tags",
+    ),
   );
-  console.log("Created At:  ", task.createdAt);
+  console.log("Created At:  ", colors.meta(task.createdAt));
 
   if (Array.isArray(task.subtasks) && 0 < task.subtasks.length) {
-    console.log("\nSubTasks...");
+    console.log(colors.info("\nSubTasks..."));
 
     task.subtasks.forEach((subtask) => {
-      console.log(`   [${subtask.id}] ${subtask.title}`);
-      console.log(`       Status: ${subtask.status}\n`);
+      console.log(
+        colors.error(
+          `   [${subtask.id}] ${colors.warn(subtask.status.padEnd(5))} --> ${colors.title(subtask.title)}`,
+        ),
+      );
     });
   }
 };

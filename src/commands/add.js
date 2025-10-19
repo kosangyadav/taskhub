@@ -1,11 +1,18 @@
 import { Command } from "commander";
 import { readTasks, writeTasks } from "../storage/jsonOps.js";
 import { validatePriority, validateStatus } from "./list.js";
-import { coloredPriority, coloredStatus, colors } from "../utils/colors.js";
+import {
+  bgColors,
+  coloredPriority,
+  coloredStatus,
+  colors,
+} from "../utils/colors.js";
 
 export const validateID = (ID, tasks) => {
   if (isNaN(ID) || ID < 0 || ID >= tasks.length) {
-    console.error(ID, " is an invalid ID. Please provide a valid task ID.");
+    console.log(
+      ` ${colors.error(`✘ Oops! There’s no task with ID ${ID}. Try ${bgColors.info("'list'")} command to see all available tasks.`)}`,
+    );
     return false;
   }
   return true;

@@ -11,6 +11,17 @@ export const colors = {
   bold: chalk.bold,
 };
 
+export const bgColors = {
+  success: chalk.bgHex("#08CB00").black,
+  error: chalk.bgHex("#FF0000").black.bold,
+  warn: chalk.bgHex("#F39F5A").black.bold,
+  info: chalk.bgHex("#FF6363").black.bold,
+  meta: chalk.bgHex("#80A1BA").black,
+  tag: chalk.bgHex("#85CFCB").black,
+  title: chalk.bgHex("#8B5DFF").black.bold,
+  bold: chalk.bold,
+};
+
 export const coloredStatus = (status) => {
   switch (status) {
     case "todo":

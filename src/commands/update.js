@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { readTasks, writeTasks } from "../storage/jsonOps.js";
 import { validatePriority, validateStatus } from "./list.js";
 import { validateID } from "./add.js";
+import { colors } from "../utils/colors.js";
 
 const cmd = new Command("update")
   .argument("<ID>", "task's id")
@@ -29,7 +30,9 @@ const cmd = new Command("update")
       !options.tags
     ) {
       console.error(
-        "Please provide at least one option to update a task...\nUse options -t for title, -s for status or -d for description",
+        colors.error(
+          "✘ Please provide at least one option to update a task...\nUse options -t for title, -s for status or -d for description",
+        ),
       );
       return;
     }
@@ -47,9 +50,13 @@ const updateTheTask = (ID, options) => {
   // Validate ID for subtasks and update the subtasks
   if (options.sub) {
     if (options.description) {
-      console.error("Subtasks doesn't support description yet...");
       console.error(
-        "so, please add or update the title and status of subtasks...",
+        colors.error("✘ Subtasks doesn't support description yet..."),
+      );
+      console.error(
+        colors.error(
+          "so, please add or update the title and status of subtasks...",
+        ),
       );
       return;
     }
@@ -57,15 +64,24 @@ const updateTheTask = (ID, options) => {
     const ids = ID.split(".");
     if (ids.length !== 2) {
       console.error(
-        "For updating a subtask, please provide ID in format: [pID.sID] :: pID -> parentTaskID, sID -> subtaskID",
+        colors.error(
+          "✘ invalid format. Use [pID.sID] (e.g., 3.1) → pID = parent task ID, sID = subtask ID.",
+        ),
       );
       return;
     }
     const [pID, sID] = ids;
     if (!validateID(pID, tasks)) return;
     if (!tasks[pID].subtasks || !validateID(sID, tasks[pID].subtasks)) {
-      console.error(
-        sID + " is an invalid subtask ID. Please provide a valid subtask ID.",
+      // console.error(
+      //   colors.error(
+      //     sID + " is an invalid subtask ID. Please provide a valid subtask ID.",
+      //   ),
+      // );
+      console.log(
+        colors.error(
+          `✘ error: Subtask ID ${sID} not found. Check available IDs and try again.`,
+        ),
       );
       return;
     }
@@ -81,29 +97,35 @@ const updateTheTask = (ID, options) => {
       //   options.description || tasks[pIDInt].subtasks[sIDInt].description,
     });
 
-    console.log(`Subtask ID ${sID} under Task ID ${pID} updated...`);
+    // console.log(
+    // colors.success(`✔ Subtask ID ${sID} under Task ID ${pID} updated...`),
+    // );
+    console.log(
+      colors.success(`✔ Updated subtask #${sID} under task #${pID}.`),
+    );
   } else {
     // Validate ID for main tasks
     if (!validateID(ID, tasks)) return;
 
-    if (!validatePriority(options.priority) && options.priority) return;
+    if (options.priority && !validatePriority(options.priority)) return;
 
     // Update the main tasks
     ID = parseInt(ID, 10);
 
     tasks.splice(ID, 1, {
       ...tasks[ID],
-      title: options.title || tasks[ID].title,
-      status: options.status || tasks[ID].status,
-      description: options.description || tasks[ID].description,
-      priority: options.priority || tasks[ID].priority,
-      due: options.due || tasks[ID].due,
+      // title: options.title || tasks[ID].title,
+      // status: options.status || tasks[ID].status,
+      // description: options.description || tasks[ID].description,
+      // priority: options.priority || tasks[ID].priority,
+      // due: options.due || tasks[ID].due,
+      ...options,
       tags: options.tags ? options.tags.split(",") : tasks[ID].tags,
       // Keep existing subtasks if any
       subtasks: tasks[ID].subtasks || [],
     });
 
-    console.log(`Task ID ${ID} updated...`);
+    console.log(colors.success(`✔ Task ID ${ID} updated successfully...`));
   }
 
   // Write updated tasks back to storage

@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { readTasks, writeTasks } from "../storage/jsonOps.js";
 import { validateID } from "./add.js";
+import { colors } from "../utils/colors.js";
 
 const removeTask = (ID, options) => {
   // Read existing tasks from storage
@@ -11,7 +12,9 @@ const removeTask = (ID, options) => {
     const ids = ID.split(".");
     if (ids.length !== 2) {
       console.error(
-        "For removing a subtask, please provide ID in format: [pID.sID] :: pID -> parentTaskID, sID -> subtaskID",
+        colors.error(
+          "✘ Invalid format.\nUse: [pID.sID] (e.g., 3.1)\n→ pID = parent task ID, sID = subtask ID.",
+        ),
       );
       return;
     }
@@ -19,7 +22,9 @@ const removeTask = (ID, options) => {
     if (!validateID(pID, tasks)) return;
     if (!tasks[pID].subtasks || !validateID(sID, tasks[pID].subtasks)) {
       console.error(
-        sID + " is an invalid subtask ID. Please provide a valid subtask ID.",
+        colors.error(
+          `✘ error: Subtask ID ${sID} not found. Check available IDs and try again.`,
+        ),
       );
       return;
     }
@@ -31,7 +36,9 @@ const removeTask = (ID, options) => {
     const removedSubtask = tasks[pIDInt].subtasks.splice(sIDInt, 1);
 
     console.log(
-      `Subtask removed: ${removedSubtask[0].title} [ID: ${removedSubtask[0].id}] from Task ID: ${pIDInt}`,
+      colors.success(
+        `✔ Removed subtask "${removedSubtask[0].title}" (ID: ${removedSubtask[0].id}) from task ${pIDInt}.`,
+      ),
     );
 
     // Reassign IDs to remaining subtasks
@@ -45,8 +52,11 @@ const removeTask = (ID, options) => {
     // remove the task
     ID = parseInt(ID, 10);
     const removedTask = tasks.splice(ID, 1);
+
     console.log(
-      `Task removed: ${removedTask[0].title} [ID: ${removedTask[0].id}]`,
+      colors.success(
+        `✔ Removed task "${removedTask[0].title}" (ID: ${removedTask[0].id}).`,
+      ),
     );
     // Reassign IDs to remaining tasks
     tasks.forEach((task, index) => {
@@ -60,7 +70,8 @@ const removeTask = (ID, options) => {
 
 const removeAllTasks = () => {
   writeTasks([]);
-  console.log("All tasks have been removed.");
+
+  console.log(colors.success("✔ Success: All tasks have been removed."));
 };
 
 const cmd = new Command("remove")
@@ -74,12 +85,16 @@ const cmd = new Command("remove")
   .action((ID, options) => {
     if (ID && options.all) {
       console.error(
-        "Please provide either an ID or the --all option, not both.",
+        colors.error(
+          "✖ Please provide either a task ID or the --all option, not both.",
+        ),
       );
       return;
     } else if (!ID && !options.all) {
       console.error(
-        "Please provide an ID or use the --all option to remove all tasks.",
+        colors.error(
+          "✖ Please provide a task ID or use the --all option to remove all tasks.",
+        ),
       );
       return;
     } else if (ID) removeTask(ID, options);
