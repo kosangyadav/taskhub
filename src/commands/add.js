@@ -9,9 +9,15 @@ import {
 } from "../utils/colors.js";
 
 export const validateID = (ID, tasks) => {
+  // console.log({ ID });
   if (isNaN(ID) || ID < 0 || ID >= tasks.length) {
     console.log(
-      ` ${colors.error(`✘ Oops! There’s no task with ID ${ID}. Try ${bgColors.info("'list'")} command to see all available tasks.`)}`,
+      ` ${colors.error(`✘ Oops! There’s no task with ID ${ID}. Try ${bgColors.info("'list'")} command to see all available tasks.`)}\n`,
+    );
+    return false;
+  } else if (!Number.isInteger(Number(ID))) {
+    console.log(
+      ` ${colors.error(`✘ Oops! This ID: ${ID} is not valid for tasks, but valid for subtasks...\nIf you wants to remove a subtask, them add ${bgColors.info("'--sub'")} at the end of command.`)}\n`,
     );
     return false;
   }
@@ -33,9 +39,9 @@ const addTask = (title, description, options) => {
     title,
     description: description || "",
     status: options.status, // todo | doing | done
-    priority: options.priority, // low | medium | high
+    priority: options.priority, // noise | high | signal
     due: options.due || null, // DD-MM-YYYY
-    tags: options.tags ? options.tags.split(",") : [],
+    tags: options.tags ? options.tags.split(",").map((tag) => tag.trim()) : [],
     subtasks: [],
     createdAt: new Date().toISOString(),
   };
@@ -46,7 +52,7 @@ const addTask = (title, description, options) => {
 ${colors.success("✔ Task added successfully!")}
 ${colors.bold("Title:".padEnd(14))} ${colors.title(title)}
 ${colors.bold("Description:".padEnd(14))} ${colors.info(description || "No description")}
-${colors.bold("Priority:".padEnd(14))} ${colors.error(coloredPriority(options.priority) || "medium")}
+${colors.bold("Priority:".padEnd(14))} ${colors.error(coloredPriority(options.priority) || "high")}
 ${colors.bold("Status:".padEnd(14))} ${colors.warn(coloredStatus(options.status) || "todo")}
 ${colors.bold("Due Date:".padEnd(14))} ${colors.error(options.due || "No due date")}
 ${colors.bold("Tags:".padEnd(14))} ${
@@ -96,8 +102,8 @@ const cmd = new Command("add")
   )
   .option(
     "-p, --priority <level>",
-    "set task priority (low, medium, high)",
-    "medium",
+    "set task priority (noise, high, signal)",
+    "high",
   )
   .option("-D, --due <date>", "set due date(DD-MM-YYYY)")
   .option("--tags <tags>", "comma-separated tags for the task")

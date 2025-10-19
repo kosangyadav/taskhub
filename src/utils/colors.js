@@ -25,30 +25,27 @@ export const bgColors = {
 export const coloredStatus = (status) => {
   switch (status) {
     case "todo":
-      return colors.warn(status);
+      return colors.error(status);
     case "doing":
-      return colors.info(status);
+      return colors.warn(status);
     case "done":
       return colors.success(status);
     default:
+      console.log(status);
       return status;
   }
 };
 
 export const coloredPriority = (priority) => {
   switch (priority) {
-    case "low":
-      return colors.tag(priority);
-    case "medium":
-      return colors.info(priority);
+    case "noise":
+      return colors.meta(priority);
     case "high":
       return colors.warn(priority);
-    case "top":
-      return colors.error(chalk.underline(priority));
     case "signal":
-      return colors.error(priority + "!!");
+      return colors.error(priority);
     default:
-      return priority;
+      return colors.warn(priority);
   }
 };
 
