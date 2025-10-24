@@ -12,7 +12,7 @@ import {
 } from "../utils/tableRenderer.js";
 
 import { filterTasks } from "../utils/taskFilters.js";
-import { smartSortTasks } from "../../sortList.js";
+import { smartSortTasks } from "../utils/sortList.js";
 
 const listTasks = (detailed, options) => {
   const allTasks = readTasks();

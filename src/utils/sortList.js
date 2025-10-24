@@ -1,4 +1,4 @@
-import { getDaysDifference, parseDate } from "./src/utils/timeUtils.js";
+import { getDaysDifference, parseDate } from "./timeUtils.js";
 
 /**
  * Checks if a task is overdue

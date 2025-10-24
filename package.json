@@ -1,8 +1,9 @@
 {
   "name": "taskhub",
   "version": "1.0.0",
-  "description": "a simple cli tool for managing tasks...",
+  "description": "A smart CLI tool for managing tasks with intelligent sorting, priorities, and deadlines",
   "type": "module",
+  "main": "src/index.js",
   "bin": {
     "taskhub": "bin/taskhub.js"
   },
@@ -10,13 +11,38 @@
     "start": "node ./bin/taskhub.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "taskhub",
-    "commander",
-    "node.js"
+  "files": [
+    "bin/",
+    "src/",
+    "README.md"
   ],
-  "author": "baka",
-  "license": "ISC",
+  "keywords": [
+    "cli",
+    "task-manager",
+    "productivity",
+    "todo",
+    "tasks",
+    "deadline",
+    "priority",
+    "terminal",
+    "command-line"
+  ],
+  "author": {
+    "name": "Kosang Yadav",
+    "email": "lightnoob2001@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kosangyadav/taskhub.git"
+  },
+  "homepage": "https://github.com/kosangyadav/taskhub#readme",
+  "bugs": {
+    "url": "https://github.com/kosangyadav/taskhub/issues"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "dependencies": {
     "chalk": "^5.6.2",
     "commander": "^14.0.1"
