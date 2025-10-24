@@ -1,80 +1,17 @@
 import { Command } from "commander";
 import { readTasks, writeTasks } from "../storage/jsonOps.js";
-import { validatePriority, validateStatus } from "./list.js";
-import { validateID } from "./add.js";
-import { colors } from "../utils/colors.js";
-
-/**
- * Validates due date format (DD-MM-YYYY)
- * @param {string} dateStr - Date string to validate
- * @returns {boolean} - True if valid, false otherwise
- */
-const validateDueDate = (dateStr) => {
-  if (!dateStr || typeof dateStr !== "string") {
-    console.error(
-      colors.error("✘ Due date cannot be empty. Use format: DD-MM-YYYY"),
-    );
-    return false;
-  }
-
-  // Check format DD-MM-YYYY
-  const dateRegex = /^\d{2}-\d{2}-\d{4}$/;
-  if (!dateRegex.test(dateStr)) {
-    console.error(
-      colors.error(
-        `✘ Invalid date format: ${dateStr}. Please use DD-MM-YYYY format (e.g., 25-12-2024)`,
-      ),
-    );
-    return false;
-  }
-
-  // Parse and validate the date
-  const parts = dateStr.split("-");
-  const day = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10);
-  const year = parseInt(parts[2], 10);
-
-  // Basic range validation
-  if (day < 1 || day > 31) {
-    console.error(
-      colors.error(`✘ Invalid day: ${day}. Day must be between 1 and 31`),
-    );
-    return false;
-  }
-
-  if (month < 1 || month > 12) {
-    console.error(
-      colors.error(`✘ Invalid month: ${month}. Month must be between 1 and 12`),
-    );
-    return false;
-  }
-
-  if (year < 1900 || year > 2100) {
-    console.error(
-      colors.error(
-        `✘ Invalid year: ${year}. Year must be between 1900 and 2100`,
-      ),
-    );
-    return false;
-  }
-
-  // Check if the date is actually valid (handles cases like 31-02-2024)
-  const date = new Date(year, month - 1, day);
-  if (
-    date.getDate() !== day ||
-    date.getMonth() !== month - 1 ||
-    date.getFullYear() !== year
-  ) {
-    console.error(
-      colors.error(
-        `✘ Invalid date: ${dateStr}. This date does not exist in the calendar`,
-      ),
-    );
-    return false;
-  }
-
-  return true;
-};
+import {
+  validatePriority,
+  validateStatus,
+  validateID,
+  validateDueDate,
+  validateSubtaskOptions,
+} from "../utils/validation.js";
+import {
+  formatTaskUpdated,
+  formatSubtaskUpdated,
+  formatError,
+} from "../utils/formatters.js";
 
 const cmd = new Command("update")
   .argument("<ID>", "task's id")
@@ -102,8 +39,8 @@ const cmd = new Command("update")
       !options.tags
     ) {
       console.error(
-        colors.error(
-          "✘ Please provide at least one option to update a task...\nUse options -t for title, -s for status or -d for description",
+        formatError(
+          "Please provide at least one option to update a task...\nUse options -t for title, -s for status or -d for description",
         ),
       );
       return;
@@ -126,23 +63,14 @@ const updateTheTask = (ID, options) => {
 
   // Validate ID for subtasks and update the subtasks
   if (options.sub) {
-    if (options.description) {
-      console.error(
-        colors.error("✘ Subtasks doesn't support description yet..."),
-      );
-      console.error(
-        colors.error(
-          "so, please add or update the title and status of subtasks...",
-        ),
-      );
-      return;
-    }
+    // Validate subtask options first
+    if (!validateSubtaskOptions(options)) return;
 
     const ids = ID.split(".");
     if (ids.length !== 2) {
       console.error(
-        colors.error(
-          "✘ invalid format. Use [pID.sID] (e.g., 3.1) → pID = parent task ID, sID = subtask ID.",
+        formatError(
+          "invalid format. Use [pID.sID] (e.g., 3.1) → pID = parent task ID, sID = subtask ID.",
         ),
       );
       return;
@@ -156,8 +84,8 @@ const updateTheTask = (ID, options) => {
       //   ),
       // );
       console.log(
-        colors.error(
-          `✘ error: Subtask ID ${sID} not found. Check available IDs and try again.`,
+        formatError(
+          `error: Subtask ID ${sID} not found. Check available IDs and try again.`,
         ),
       );
       return;
@@ -177,9 +105,7 @@ const updateTheTask = (ID, options) => {
     // console.log(
     // colors.success(`✔ Subtask ID ${sID} under Task ID ${pID} updated...`),
     // );
-    console.log(
-      colors.success(`✔ Updated subtask #${sID} under task #${pID}.`),
-    );
+    console.log(formatSubtaskUpdated(sID, pID));
   } else {
     // Validate ID for main tasks
     if (!validateID(ID, tasks)) return;
@@ -202,7 +128,7 @@ const updateTheTask = (ID, options) => {
       subtasks: tasks[ID].subtasks || [],
     });
 
-    console.log(colors.success(`✔ Task ID ${ID} updated successfully...`));
+    console.log(formatTaskUpdated(ID));
   }
 
   // Write updated tasks back to storage

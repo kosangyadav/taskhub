@@ -1,28 +1,15 @@
 import { Command } from "commander";
 import { readTasks, writeTasks } from "../storage/jsonOps.js";
-import { validatePriority, validateStatus } from "./list.js";
 import {
-  bgColors,
-  coloredPriority,
-  coloredStatus,
-  colors,
-} from "../utils/colors.js";
-
-export const validateID = (ID, tasks) => {
-  // console.log({ ID });
-  if (isNaN(ID) || ID < 0 || ID >= tasks.length) {
-    console.log(
-      ` ${colors.error(`✘ Oops! There’s no task with ID ${ID}. Try ${bgColors.info("'list'")} command to see all available tasks.`)}\n`,
-    );
-    return false;
-  } else if (!Number.isInteger(Number(ID))) {
-    console.log(
-      ` ${colors.error(`✘ Oops! This ID: ${ID} is not valid for tasks, but valid for subtasks...\nIf you wants to remove a subtask, them add ${bgColors.info("'--sub'")} at the end of command.`)}\n`,
-    );
-    return false;
-  }
-  return true;
-};
+  validatePriority,
+  validateStatus,
+  validateID,
+  validateSubtaskOptions,
+} from "../utils/validation.js";
+import {
+  formatTaskCreated,
+  formatSubtaskCreated,
+} from "../utils/formatters.js";
 
 const addTask = (title, description, options) => {
   const tasks = readTasks();
@@ -47,25 +34,14 @@ const addTask = (title, description, options) => {
   };
   tasks.push(newTask);
   writeTasks(tasks);
-  // console.log(`Task added: ${title}`);
-  console.log(`
-${colors.success("✔ Task added successfully!")}
-${colors.bold("Title:".padEnd(14))} ${colors.title(title)}
-${colors.bold("Description:".padEnd(14))} ${colors.info(description || "No description")}
-${colors.bold("Priority:".padEnd(14))} ${colors.error(coloredPriority(options.priority) || "high")}
-${colors.bold("Status:".padEnd(14))} ${colors.warn(coloredStatus(options.status) || "todo")}
-${colors.bold("Due Date:".padEnd(14))} ${colors.error(options.due || "No due date")}
-${colors.bold("Tags:".padEnd(14))} ${
-    newTask.tags.length
-      ? newTask.tags.map((tag) => colors.tag(tag.trim())).join(", ")
-      : colors.meta("No tags")
-  }
-${colors.bold("Created at:".padEnd(14))} ${colors.meta(new Date().toLocaleString("ta-LK"))}
-`);
+  console.log(formatTaskCreated(newTask, options));
 };
 
 const addSubtask = (parentID, title, options) => {
   const tasks = readTasks();
+
+  // Validate subtask options first
+  if (!validateSubtaskOptions(options)) return;
 
   // Validate parentID
   if (!validateID(parentID, tasks)) return;
@@ -82,13 +58,7 @@ const addSubtask = (parentID, title, options) => {
   };
   parentTask.subtasks.push(newSubtask);
   writeTasks(tasks);
-  // console.log(`Subtask added under Task ID ${parentID}: ${title}`);
-  console.log(`${colors.success("✔ Subtask added successfully!")}
-${colors.bold("Parent Task: ".padEnd(18))} ${colors.meta("[" + parentID + "]")} ${colors.title(parentTask.title)}
-${colors.bold("Subtask Title:".padEnd(18))} ${colors.info(title)}
-${colors.bold("Subtask Status:".padEnd(18))} ${colors.warn(coloredStatus(options.status)) || "todo"}
-${colors.bold("Created at:".padEnd(18))} ${colors.meta(new Date().toLocaleString("ta-LK"))}
-`);
+  console.log(formatSubtaskCreated(parentTask, parentID, title, options));
 };
 
 const cmd = new Command("add")
@@ -108,10 +78,30 @@ const cmd = new Command("add")
   .option("-D, --due <date>", "set due date(DD-MM-YYYY)")
   .option("--tags <tags>", "comma-separated tags for the task")
   .description("Add a new task or subtask")
-  .action((title, description = "", options) => {
-    // console.log({ options, title, description });
-    if (options.sub) addSubtask(options.sub, title, options);
-    else addTask(title, description, options);
+  .action((title, description = "", options, command) => {
+    if (options.sub) {
+      // For subtasks, check if unsupported options were explicitly provided
+      const providedOptions = command.parent.rawArgs;
+      const subtaskOptions = {
+        status: options.status,
+        // Only include other options if they were explicitly provided
+        priority:
+          providedOptions.includes("-p") ||
+          providedOptions.includes("--priority")
+            ? options.priority
+            : undefined,
+        due:
+          providedOptions.includes("-D") || providedOptions.includes("--due")
+            ? options.due
+            : undefined,
+        description:
+          description && description.trim() ? description : undefined,
+        tags: providedOptions.includes("--tags") ? options.tags : undefined,
+      };
+      addSubtask(options.sub, title, subtaskOptions);
+    } else {
+      addTask(title, description, options);
+    }
   });
 
 export default cmd;

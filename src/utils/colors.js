@@ -27,25 +27,60 @@ export const coloredStatus = (status) => {
     case "todo":
       return colors.error(status);
     case "doing":
-      return colors.warn(status);
+      return colors.info(status);
     case "done":
-      return colors.success(status);
+      return colors.meta(status);
     default:
-      console.log(status);
       return status;
   }
 };
 
 export const coloredPriority = (priority) => {
-  switch (priority) {
+  switch (priority.trim()) {
     case "noise":
       return colors.meta(priority);
     case "high":
-      return colors.warn(priority);
+      return colors.info(priority);
     case "signal":
       return colors.error(priority);
     default:
       return colors.warn(priority);
+  }
+};
+
+/**
+ * Gets status icon for tasks and subtasks
+ * @param {string} status - Status (todo, doing, done)
+ * @returns {string} - Status icon
+ */
+export const getStatusIcon = (status) => {
+  switch (status) {
+    case "todo":
+      return `${colors.error("○")}`;
+    case "doing":
+      return `${colors.info("◐")}`;
+    case "done":
+      return `${colors.meta("●")}`;
+    default:
+      return `${colors.error("○")}`;
+  }
+};
+
+/**
+ * Gets priority icon for tasks
+ * @param {string} priority - Priority (noise, high, signal)
+ * @returns {string} - Priority icon
+ */
+export const getPriorityIcon = (priority) => {
+  switch (priority) {
+    case "noise":
+      return `${colors.meta(0)}`;
+    case "high":
+      return `${colors.info(1)}`;
+    case "signal":
+      return `${colors.error("#")}`;
+    default:
+      return `${colors.info(1)}`;
   }
 };
 

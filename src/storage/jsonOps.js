@@ -1,67 +1,49 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { STORAGE_CONFIG } from "../config/constants.js";
 
-const dirPath = path.join(os.homedir(), ".config", "taskhub");
-const filePath = path.join(dirPath, "tasks.json");
+const dirPath = path.join(
+  os.homedir(),
+  STORAGE_CONFIG.configDir,
+  STORAGE_CONFIG.appDir,
+);
+const filePath = path.join(dirPath, STORAGE_CONFIG.fileName);
 
 export const initStorage = () => {
-  if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
-  if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, JSON.stringify([]));
-};
-
-/**
- * Migrates old priority values to new 3-state system
- * @param {Array} tasks - Array of task objects
- * @returns {Array} - Migrated tasks array
- */
-const migratePriorities = (tasks) => {
-  return tasks.map((task) => {
-    if (!task.priority) {
-      task.priority = "high"; // Default for tasks without priority
-      return task;
-    }
-
-    // Migration mapping
-    switch (task.priority) {
-      case "low":
-        task.priority = "noise";
-        break;
-      case "medium":
-        task.priority = "high";
-        break;
-      case "high":
-        task.priority = "high";
-        break;
-      case "top":
-        task.priority = "signal";
-        break;
-      case "signal":
-        task.priority = "signal";
-        break;
-      default:
-        // If it's already a new priority value or unknown, keep it or default
-        if (!["noise", "high", "signal"].includes(task.priority)) {
-          task.priority = "high";
-        }
-    }
-
-    return task;
-  });
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify([], null, STORAGE_CONFIG.jsonIndent),
+    );
+  }
 };
 
 export const readTasks = () => {
   try {
-    const tasks = JSON.parse(fs.readFileSync(filePath, "utf8"));
-    // Apply migration to ensure all tasks have new priority values
-    return migratePriorities(tasks);
-  } catch {
+    const rawData = fs.readFileSync(filePath, STORAGE_CONFIG.encoding);
+    const tasks = JSON.parse(rawData);
+    return Array.isArray(tasks) ? tasks : [];
+  } catch (error) {
+    console.error("Error reading tasks:", error.message);
     return [];
   }
 };
 
 export const writeTasks = (tasks) => {
-  // Ensure all tasks have valid priorities before saving
-  const migratedTasks = migratePriorities(tasks);
-  fs.writeFileSync(filePath, JSON.stringify(migratedTasks, null, 2));
+  try {
+    // Ensure tasks is an array
+    const tasksArray = Array.isArray(tasks) ? tasks : [];
+
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify(tasksArray, null, STORAGE_CONFIG.jsonIndent),
+    );
+  } catch (error) {
+    console.error("Error writing tasks:", error.message);
+    throw error;
+  }
 };
