@@ -22,7 +22,7 @@ const listTasks = (detailed, options) => {
   if (filteredTasks === null) return; // Validation failed
 
   // Apply smart sorting
-  const tasks = smartSortTasks(filteredTasks);
+  const tasks = options.nosort ? filteredTasks : smartSortTasks(filteredTasks);
 
   // Display results
   if (tasks.length === 0) {
@@ -86,6 +86,7 @@ const cmd = new Command("list")
     "-f, --find <keywords>",
     "shows filtered list based on keywords for title or description",
   )
+  .option("--nosort", "shows no smart-sorted filtered list")
   // .option("-i, --ID <ID>", "shows tasks with their IDs")
   .action((ID, options) => {
     if (ID) listTask(ID);
