@@ -16,7 +16,7 @@ A smart command-line task manager with intelligent sorting, priority management,
 ## 📦 Installation
 
 ```bash
-npm install -g taskhub
+npm i @kosangyadav/taskhub
 ```
 
 ## 🚀 Quick Start
